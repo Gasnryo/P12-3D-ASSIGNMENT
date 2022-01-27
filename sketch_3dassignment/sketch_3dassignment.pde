@@ -1,8 +1,9 @@
 import java.awt.Robot;
 
 //colors
-color black = #000000;
-color white = #FFFFFF;
+color black    = #000000; //oak planks
+color white    = #FFFFFF; //empty space
+color dullBlue = #7092BE; //mossy bricks
 
 //textures
 PImage mossyStone;
@@ -31,14 +32,15 @@ float leftRightHeadAngle, upDownHeadAngle;
 
 void setup() {
   //size(displayWidth, displayHeight, P3D);
-  
+
   mossyStone = loadImage("Mossy_Stone_Bricks.png");
+  oakPlanks = loadImage("Oak_Planks.png");
   textureMode(NORMAL);             
   try {
-   cbt = new Robot(); 
+    cbt = new Robot();
   }
   catch(Exception e) {
-   e.printStackTrace(); 
+    e.printStackTrace();
   }
   skipFrame = false;
   fullScreen(P3D);
@@ -53,48 +55,46 @@ void setup() {
   upX = 0;
   upY = 1;
   upZ = 0;
-  
+
   //initialize map
   map = loadImage("map.png");
   gridSize = 100;
-  
+
   leftRightHeadAngle = radians(270);
   //noCursor();
-  
 }
 
 void draw() {
   background(0);
+  //lights();
+  
+  pointLight(255, 255, 255, eyeX, eyeY, eyeZ);
+  
   camera(eyeX, eyeY, eyeZ, focusX, focusY, focusZ, upX, upY, upZ);
-  drawFloor(); 
+  drawFloor(-2000, 2000, height, gridSize);
+  drawFloor(-2000, 2000, height-gridSize*4, gridSize); 
   drawFocalPoint();
   controlCamera();
   drawMap();
-  
-  //move();
-  //drawAxis();
-  //drawFloor(-2000, 2000, height, 100);
-  //drawFloor(-2000, 2000, 0, 100);
-  //drawMap();
 }
 
 void drawMap() {
- for (int x = 0; x < map.width; x++) {
-  for (int y = 0; y < map.height; y++) {
-   color c = map.get(x, y);
-   if (c != white) {
-     //pushMatrix();
-     //fill(c);
-     //stroke(100);
-     //translate(x*gridSize-2000, height/2, y*gridSize-2000);
-     //box(gridSize,height,gridSize);
-     //popMatrix();
-     texturedCube(x*gridSize-2000, height-gridSize, y*gridSize-2000, mossyStone, gridSize);
-     texturedCube(x*gridSize-2000, height-gridSize*2, y*gridSize-2000, mossyStone, gridSize);
-     texturedCube(x*gridSize-2000, height-gridSize*3, y*gridSize-2000, mossyStone, gridSize);
-   }
+  for (int x = 0; x < map.width; x++) {
+    for (int y = 0; y < map.height; y++) {
+      color c = map.get(x, y);
+      if (c == dullBlue) {
+        texturedCube(x*gridSize-2000, height-gridSize, y*gridSize-2000, mossyStone, gridSize);
+        texturedCube(x*gridSize-2000, height-gridSize*2, y*gridSize-2000, mossyStone, gridSize);
+        texturedCube(x*gridSize-2000, height-gridSize*3, y*gridSize-2000, mossyStone, gridSize);
+      }
+
+      if (c == black) {
+        texturedCube(x*gridSize-2000, height-gridSize, y*gridSize-2000, oakPlanks, gridSize);
+        texturedCube(x*gridSize-2000, height-gridSize*2, y*gridSize-2000, oakPlanks, gridSize);
+        texturedCube(x*gridSize-2000, height-gridSize*3, y*gridSize-2000, oakPlanks, gridSize);
+      }
+    }
   }
- }
 }
 
 void drawFocalPoint() {
@@ -104,11 +104,18 @@ void drawFocalPoint() {
   popMatrix();
 }
 
-void drawFloor() {
+void drawFloor(int start, int end, int level, int gap) {
   stroke(255);
-  for (int x = -2000; x <= 2000; x = x+100) {
-    line(x, height, -2000, x, height, 2000);
-    line(-2000, height, x, 2000, height, x);
+  strokeWeight(1);
+  int x = start;
+  int z = start;
+  while (z < end) {
+    texturedCube(x, level, z, oakPlanks, gap);
+    x = x+gap;
+    if (x >= end) {
+      x = start;
+      z = z+gap;
+    }
   }
 }
 
@@ -130,19 +137,17 @@ void controlCamera() {
     eyeZ = eyeZ - sin(leftRightHeadAngle - PI/2)*10;
   }
   if (skipFrame == false) {
-  leftRightHeadAngle = leftRightHeadAngle + (mouseX - pmouseX)*0.01;
-  upDownHeadAngle = upDownHeadAngle + (mouseY - pmouseY)*0.01;
+    leftRightHeadAngle = leftRightHeadAngle + (mouseX - pmouseX)*0.01;
+    upDownHeadAngle = upDownHeadAngle + (mouseY - pmouseY)*0.01;
   }
-  
+
   if (upDownHeadAngle > PI/2.5) upDownHeadAngle = PI/2.5;
   if (upDownHeadAngle < -PI/2.5) upDownHeadAngle = -PI/2.5;
 
   focusX = eyeX + cos(leftRightHeadAngle)*300;
   focusZ = eyeZ + sin(leftRightHeadAngle)*300;
   focusY = eyeY + tan(upDownHeadAngle)*300;
-  
-  //if (mouseX > width-2) cbt.mouseMove(3, mouseY);
-  //else if (mouseX < 2) cbt.mouseMove(width-3, mouseY);
+
   if (mouseX < 2) {
     cbt.mouseMove(width-3, mouseY);
     skipFrame = true;
@@ -150,7 +155,7 @@ void controlCamera() {
     cbt.mouseMove(3, mouseY);
     skipFrame = true;
   } else {
-   skipFrame = false; 
+    skipFrame = false;
   }
 }
 
